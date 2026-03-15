@@ -1,0 +1,407 @@
+###############################################################################
+# DroneMobile Vehicle Dashboard
+#
+# How to install:
+#   1. Copy this file to your HA config directory (or paste into a dashboard)
+#   2. In HA: Settings → Dashboards → Add Dashboard → pick a name
+#   3. Open the new dashboard → Edit → Raw Configuration Editor → paste this
+#
+# Required HACS frontend cards (install via HACS → Frontend):
+#   - button-card          (custom:button-card)
+#   - mushroom             (mushroom-entity-card, mushroom-chips-card)
+#   - mini-graph-card      (custom:mini-graph-card)
+#
+# Replace "Audi" below with your vehicle_name if different.
+# Entity IDs use the pattern: {domain}.{vehicle_name}_{sensor_key}
+###############################################################################
+
+title: DroneMobile
+views:
+  - title: Vehicle
+    path: vehicle
+    type: sections
+    max_columns: 2
+    sections:
+
+      ##########################################################################
+      # SECTION 1 — Vehicle Header & Status At-a-Glance
+      ##########################################################################
+      - type: grid
+        cards:
+          # ── Vehicle Title Card ──
+          - type: markdown
+            content: |
+              # 🚗 2015 Audi A3
+              **DroneMobile Connected**
+
+          # ── Quick Status Chips ──
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: sensor.audi_enginestatus
+                icon: mdi:engine
+                content_info: name
+              - type: entity
+                entity: sensor.audi_alarm
+                icon: mdi:shield-car
+                content_info: name
+              - type: entity
+                entity: sensor.audi_doorstatus
+                icon: mdi:car-door
+                content_info: name
+              - type: entity
+                entity: sensor.audi_trunkstatus
+                icon: mdi:car-back
+                content_info: name
+              - type: entity
+                entity: sensor.audi_hoodstatus
+                icon: mdi:car-convertible
+                content_info: name
+
+      ##########################################################################
+      # SECTION 2 — Primary Controls (Start/Stop & Lock/Unlock)
+      ##########################################################################
+      - type: grid
+        columns: 2
+        cards:
+          # ── Remote Start ──
+          - type: custom:button-card
+            entity: switch.audi_remotestart_switch
+            name: Remote Start
+            icon: mdi:engine
+            show_state: true
+            styles:
+              card:
+                - height: 120px
+                - border-radius: 16px
+              icon:
+                - width: 40px
+            state:
+              - value: "on"
+                color: green
+                icon: mdi:engine
+                name: Engine Running
+                styles:
+                  card:
+                    - background: "rgba(76, 175, 80, 0.15)"
+              - value: "off"
+                color: "#9e9e9e"
+                icon: mdi:engine-off
+                name: Engine Off
+            tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+
+          # ── Remote Stop ──
+          - type: custom:button-card
+            entity: switch.audi_remotestart_switch
+            name: Stop Engine
+            icon: mdi:stop-circle
+            show_state: false
+            styles:
+              card:
+                - height: 120px
+                - border-radius: 16px
+              icon:
+                - width: 40px
+                - color: "#ef5350"
+            state:
+              - value: "on"
+                styles:
+                  card:
+                    - background: "rgba(239, 83, 80, 0.15)"
+              - value: "off"
+                styles:
+                  card:
+                    - opacity: "0.5"
+            tap_action:
+              action: call-service
+              service: switch.turn_off
+              service_data:
+                entity_id: switch.audi_remotestart_switch
+            confirmation:
+              text: Stop the engine?
+
+          # ── Lock ──
+          - type: custom:button-card
+            entity: lock.audi_doorlock
+            name: Lock
+            icon: mdi:car-door-lock
+            show_state: true
+            styles:
+              card:
+                - height: 120px
+                - border-radius: 16px
+              icon:
+                - width: 40px
+            state:
+              - value: locked
+                color: green
+                name: Locked
+                styles:
+                  card:
+                    - background: "rgba(76, 175, 80, 0.15)"
+              - value: unlocked
+                color: "#ff9800"
+                name: Unlocked
+                styles:
+                  card:
+                    - background: "rgba(255, 152, 0, 0.15)"
+            tap_action:
+              action: call-service
+              service: lock.lock
+              service_data:
+                entity_id: lock.audi_doorlock
+
+          # ── Unlock ──
+          - type: custom:button-card
+            entity: lock.audi_doorlock
+            name: Unlock
+            icon: mdi:car-door
+            show_state: false
+            styles:
+              card:
+                - height: 120px
+                - border-radius: 16px
+              icon:
+                - width: 40px
+                - color: "#ff9800"
+            state:
+              - value: locked
+                styles:
+                  card:
+                    - opacity: "0.5"
+              - value: unlocked
+                styles:
+                  card:
+                    - background: "rgba(255, 152, 0, 0.15)"
+            tap_action:
+              action: call-service
+              service: lock.unlock
+              service_data:
+                entity_id: lock.audi_doorlock
+            confirmation:
+              text: Unlock the doors?
+
+      ##########################################################################
+      # SECTION 3 — Secondary Controls (Trunk, Panic, Aux)
+      ##########################################################################
+      - type: grid
+        columns: 3
+        cards:
+          # ── Trunk ──
+          - type: custom:button-card
+            entity: lock.audi_trunk
+            name: Trunk
+            icon: mdi:car-back
+            show_state: false
+            styles:
+              card:
+                - height: 100px
+                - border-radius: 16px
+              icon:
+                - width: 36px
+            tap_action:
+              action: call-service
+              service: lock.open
+              service_data:
+                entity_id: lock.audi_trunk
+            confirmation:
+              text: Open the trunk?
+
+          # ── Panic ──
+          - type: custom:button-card
+            entity: switch.audi_panic_switch
+            name: Panic
+            icon: mdi:alarm-light
+            show_state: false
+            styles:
+              card:
+                - height: 100px
+                - border-radius: 16px
+              icon:
+                - width: 36px
+            state:
+              - value: "on"
+                color: red
+                styles:
+                  card:
+                    - background: "rgba(239, 83, 80, 0.15)"
+                    - animation: blinker 1s linear infinite
+              - value: "off"
+                color: "#9e9e9e"
+            tap_action:
+              action: toggle
+            confirmation:
+              text: Toggle panic alarm?
+
+          # ── Aux 1 ──
+          - type: custom:button-card
+            entity: switch.audi_aux1_switch
+            name: Aux 1
+            icon: mdi:numeric-1-box
+            show_state: false
+            styles:
+              card:
+                - height: 100px
+                - border-radius: 16px
+              icon:
+                - width: 36px
+            tap_action:
+              action: call-service
+              service: switch.turn_on
+              service_data:
+                entity_id: switch.audi_aux1_switch
+            confirmation:
+              text: Trigger Aux 1?
+
+      ##########################################################################
+      # SECTION 4 — Vehicle Status Sensors
+      ##########################################################################
+      - type: grid
+        columns: 2
+        cards:
+          # ── Engine ──
+          - type: custom:mushroom-entity-card
+            entity: sensor.audi_enginestatus
+            name: Engine
+            icon: mdi:engine
+            icon_color: |-
+              {% if is_state('sensor.audi_enginestatus', 'Running') %}
+                green
+              {% else %}
+                grey
+              {% endif %}
+
+          # ── Ignition ──
+          - type: custom:mushroom-entity-card
+            entity: sensor.audi_ignitionstatus
+            name: Ignition
+            icon: hass:power
+            icon_color: |-
+              {% if is_state('sensor.audi_ignitionstatus', 'On') %}
+                amber
+              {% else %}
+                grey
+              {% endif %}
+
+          # ── Doors ──
+          - type: custom:mushroom-entity-card
+            entity: sensor.audi_doorstatus
+            name: Doors
+            icon: mdi:car-door
+            icon_color: |-
+              {% if is_state('sensor.audi_doorstatus', 'Open') %}
+                red
+              {% else %}
+                green
+              {% endif %}
+
+          # ── Alarm ──
+          - type: custom:mushroom-entity-card
+            entity: sensor.audi_alarm
+            name: Alarm
+            icon: mdi:shield-car
+            icon_color: |-
+              {% if is_state('sensor.audi_alarm', 'Armed') %}
+                green
+              {% else %}
+                orange
+              {% endif %}
+
+          # ── Trunk ──
+          - type: custom:mushroom-entity-card
+            entity: sensor.audi_trunkstatus
+            name: Trunk
+            icon: mdi:car-back
+            icon_color: |-
+              {% if is_state('sensor.audi_trunkstatus', 'Open') %}
+                red
+              {% else %}
+                green
+              {% endif %}
+
+          # ── Hood ──
+          - type: custom:mushroom-entity-card
+            entity: sensor.audi_hoodstatus
+            name: Hood
+            icon: mdi:car-convertible
+            icon_color: |-
+              {% if is_state('sensor.audi_hoodstatus', 'Open') %}
+                red
+              {% else %}
+                green
+              {% endif %}
+
+      ##########################################################################
+      # SECTION 5 — Gauges (Battery, Temperature, Odometer)
+      ##########################################################################
+      - type: grid
+        columns: 3
+        cards:
+          # ── Battery Voltage ──
+          - type: gauge
+            entity: sensor.audi_battery
+            name: Battery
+            min: 10
+            max: 15
+            needle: true
+            severity:
+              green: 12.4
+              yellow: 11.8
+              red: 10
+
+          # ── Temperature ──
+          - type: gauge
+            entity: sensor.audi_temperature
+            name: Temperature
+            min: -20
+            max: 120
+            needle: true
+            severity:
+              green: 32
+              yellow: 90
+              red: 100
+
+          # ── Odometer ──
+          - type: entity
+            entity: sensor.audi_odometer
+            name: Odometer
+            icon: mdi:counter
+
+      ##########################################################################
+      # SECTION 6 — Battery History Graph
+      ##########################################################################
+      - type: grid
+        cards:
+          - type: custom:mini-graph-card
+            entities:
+              - entity: sensor.audi_battery
+                name: Battery Voltage
+                color: "#4caf50"
+            hours_to_show: 72
+            points_per_hour: 1
+            line_width: 2
+            show:
+              labels: true
+              fill: true
+
+      ##########################################################################
+      # SECTION 7 — Location Map
+      ##########################################################################
+      - type: grid
+        cards:
+          - type: map
+            entities:
+              - entity: device_tracker.dronemobile_tracker
+            default_zoom: 15
+            hours_to_show: 24
+            aspect_ratio: 16:9
+
+          # ── Last Updated ──
+          - type: custom:mushroom-entity-card
+            entity: sensor.audi_lastrefresh
+            name: Last Updated
+            icon: mdi:clock-outline
+            icon_color: blue
