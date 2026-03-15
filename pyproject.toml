@@ -1,0 +1,21 @@
+[project]
+name = "drone-mobile-hass"
+version = "0.0.10"
+description = "Home Assistant HACS integration for DroneMobile remote car starter"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "homeassistant",
+    "drone_mobile>=0.2.30",
+    "voluptuous",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
